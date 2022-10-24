@@ -14,6 +14,7 @@ class Config {
       iamRoleName: core.getInput('iam-role-name'),
       reuseRunner: core.getInput('reuse-runner'),
       runnerCount: core.getInput('runner-count'),
+      runnerTarFile: core.getInput('runner-tar-file'),
     };
 
     const jsonTags = JSON.parse(core.getInput('aws-resource-tags'));

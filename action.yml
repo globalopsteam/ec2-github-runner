@@ -66,6 +66,12 @@ inputs:
       for example: '{"TagKey1": "TagValue1", "TagKey2": "TagValue2"}'
     required: false
     default: '{}'
+  runner-tar-file:
+    description: >-
+      Tar archive of actions-runner software that exists in the EC2 image.
+      E.g. /root/actions-runner-linux-x64-2.298.2.tar.gz
+      This input is only used with the 'start' mode
+    required: false
 outputs:
   ec2-instance-id:
     description: >-

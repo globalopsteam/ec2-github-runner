@@ -58,33 +58,39 @@ function start_runner {
 
 export HOME="/home/action-user"
 if [ ! -d "$\{HOME\}/actions-runner" ]; then
-  mkdir -p $HOME
-  groupadd "action-user"
-  useradd -d $HOME -g "action-user" "action-user"
-  echo "action-user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/action-user-sudo-no-passwd
-  command -v yum >/dev/null 2>&1 \
-    && { echo "Installing dependencies with yum"; \
-      sudo yum -y install libicu60 jq git; }
-  command -v apt-get >/dev/null 2>&1 \
-    && { echo "Installing dependencies with apt-get"; \
-      sudo apt-get update -qq >/dev/null; \
-      sudo apt-get install -y jq git; }
-  curl -fsSL https://get.docker.com -o get-docker.sh; \
-    sudo sh get-docker.sh;
-  echo "Setup docker for non-root user"
-  groupadd docker
-  usermod -aG docker "action-user"
-  echo "Installing runner"
-  mkdir -p $\{HOME\}/actions-runner
-  cd $\{HOME\}/actions-runner
-  case $(uname) in Darwin) OS="osx" ;; Linux) OS="linux" ;; esac && export RUNNER_OS=$\{OS\}
-  case $(uname -m) in aarch64|arm64) ARCH="arm64" ;; amd64|x86_64) ARCH="x64" ;; esac && export RUNNER_ARCH=$\{ARCH\}
-  curl -O -L "https://github.com/actions/runner/releases/download/v2.298.2/actions-runner-$\{RUNNER_OS\}-$\{RUNNER_ARCH\}-2.298.2.tar.gz"
+  mkdir -p "$\{HOME\}/actions-runner"
+
+  if [ -n "${config.input.runnerTarFile}" ] && [ -f "${config.input.runnerTarFile}" ]; then
+    RUNNER_TAR="${config.input.runnerTarFile}"
+  else
+    groupadd "action-user"
+	useradd -d $HOME -g "action-user" -G "docker" "action-user"
+	echo "action-user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/action-user-sudo-no-passwd
+
+    command -v yum >/dev/null 2>&1 \
+      && { echo "Installing dependencies with yum"; \
+        sudo yum -y install libicu60 jq git; }
+    command -v apt-get >/dev/null 2>&1 \
+      && { echo "Installing dependencies with apt-get"; \
+        sudo apt-get update -qq >/dev/null; \
+        sudo apt-get install -y jq git; }
+    curl -fsSL https://get.docker.com -o get-docker.sh; \
+      sudo sh get-docker.sh;
+
+    echo "Downloading runner"
+    cd "$\{HOME\}/actions-runner"
+    case $(uname) in Darwin) OS="osx" ;; Linux) OS="linux" ;; esac && export RUNNER_OS="$\{OS\}"
+    case $(uname -m) in aarch64|arm64) ARCH="arm64" ;; amd64|x86_64) ARCH="x64" ;; esac && export RUNNER_ARCH="$\{ARCH\}"
+	RUNNER_TAR="actions-runner-$\{RUNNER_OS\}-$\{RUNNER_ARCH\}-2.298.2.tar.gz"
+    curl -O -L "https://github.com/actions/runner/releases/download/v2.298.2/$\{RUNNER_TAR\}"
+  fi
+
   for i in $(seq 1 ${runnerCount}); do
+    echo "Installing runner $\{i\}"
     mkdir -p "$\{HOME\}/actions-runner/runner_$\{i\}"
-    tar xzf "./actions-runner-linux-$\{RUNNER_ARCH\}-2.298.2.tar.gz" -C "$\{HOME\}/actions-runner/runner_$\{i\}"
+    tar xzf "$\{RUNNER_TAR\}" -C "$\{HOME\}/actions-runner/runner_$\{i\}"
   done
-  chown -R "action-user:action-user" $HOME
+  chown -R "action-user:action-user" "$HOME"
 fi
 
 for i in $(seq 1 ${runnerCount}); do
