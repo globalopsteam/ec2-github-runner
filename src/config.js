@@ -8,7 +8,6 @@ class Config {
       githubToken: core.getInput('github-token'),
       ec2ImageId: core.getInput('ec2-image-id'),
       ec2InstanceType: core.getInput('ec2-instance-type'),
-      subnetId: core.getInput('subnet-id'),
       securityGroupId: core.getInput('security-group-id'),
       ec2InstanceId: core.getInput('ec2-instance-id'),
       iamRoleName: core.getInput('iam-role-name'),
@@ -16,6 +15,22 @@ class Config {
       runnerCount: core.getInput('runner-count'),
       runnerTarFile: core.getInput('runner-tar-file'),
     };
+
+    this.subnets = [];
+    const subnetId = core.getInput('subnet-id');
+
+    try {
+      const subnetIds = JSON.parse(subnetId);
+      if (typeof subnetIds != 'object') {
+        throw new Error('subnet-id must be an Array of subnets or a single subnet');
+      }
+      Object.values(subnetIds).forEach(subnet => this.subnets.push(subnet));
+    }
+    catch (e) {
+      if (subnetId) {
+        this.subnets.push(subnetId);
+      }
+    }
 
     const jsonTags = JSON.parse(core.getInput('aws-resource-tags'));
     this.tagSpecifications = [{ Key: 'runner-count', Value: core.getInput('runner-count') }];
@@ -44,7 +59,7 @@ class Config {
     }
 
     if (this.input.mode === 'start') {
-      if (!this.input.ec2ImageId || !this.input.ec2InstanceType || !this.input.subnetId || !this.input.securityGroupId) {
+      if (!this.input.ec2ImageId || !this.input.ec2InstanceType || !this.input.securityGroupId || !this.subnets.length) {
         throw new Error(`Not all the required inputs are provided for the 'start' mode`);
       }
     } else if (this.input.mode === 'stop') {
