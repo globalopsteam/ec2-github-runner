@@ -14,6 +14,7 @@ class Config {
       reuseRunner: core.getInput('reuse-runner'),
       runnerCount: core.getInput('runner-count'),
       runnerTarFile: core.getInput('runner-tar-file'),
+      sshKeyName: core.getInput('ssh-key-name'),
     };
 
     this.subnets = [];

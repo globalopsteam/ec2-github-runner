@@ -73,6 +73,10 @@ inputs:
       E.g. /root/actions-runner-linux-x64-2.298.2.tar.gz
       This input is only used with the 'start' mode
     required: false
+  ssh-key-name:
+    description: >-
+      SSH key pair name to add to the default user.
+    required: false
 outputs:
   ec2-instance-id:
     description: >-

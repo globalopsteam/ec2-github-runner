@@ -177,6 +177,9 @@ async function startEc2Instance(githubToken) {
       },
     },
   };
+  if (config.input.sshKeyName) {
+    runParams.KeyName = config.input.sshKeyName
+  }
 
   const startParams = {
     InstanceIds: [],
